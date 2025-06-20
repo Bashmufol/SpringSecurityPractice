@@ -14,6 +14,9 @@ public class UserService {
     private UserRepository repo;
 
     @Autowired
+    private JwtService jwtService;
+
+    @Autowired
     AuthenticationManager authenticationManager;
 
     public Users register(Users user) {
@@ -23,7 +26,7 @@ public class UserService {
     public String verify(Users user) {
         Authentication authentication =
                 authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
-        if(authentication.isAuthenticated()) return "success";
+        if(authentication.isAuthenticated()) return jwtService.generateToken();
         return "fail";
     }
 }
