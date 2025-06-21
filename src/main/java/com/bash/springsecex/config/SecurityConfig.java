@@ -19,12 +19,16 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    @Autowired
     private final MyUserDetailsService myUserDetailsService;
+    @Autowired
+    private JwtFilter jwtFilter;
 
     public SecurityConfig(MyUserDetailsService myUserDetailsService) {
         this.myUserDetailsService = myUserDetailsService;
@@ -32,15 +36,18 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(customizer -> customizer.disable());
-        http.authorizeHttpRequests(request -> request
-                .requestMatchers("/register", "/login")
-                .permitAll()
-                .anyRequest().authenticated());
+        return http
+                .csrf(customizer -> customizer.disable())
+                .authorizeHttpRequests(request -> request
+                    .requestMatchers("/register", "/login")
+                    .permitAll()
+                    .anyRequest().authenticated())
+                .httpBasic(Customizer.withDefaults())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtFiler, UsernamePasswordAuthenticationFilter.class)
+                .build();
+
 //        http.formLogin(Customizer.withDefaults());
-        http.httpBasic(Customizer.withDefaults());
-        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-        return http.build();
     }
 
     @Bean
